@@ -14,8 +14,8 @@ import {
   WHITE_KING,
 } from "./pieces";
 
-type Square = Piece | null;
-type Chessboard = Square[][];
+export type Square = Piece | null;
+export type Chessboard = Square[][];
 
 export const initializeChessboard = (): Chessboard => [
   [
