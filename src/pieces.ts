@@ -12,7 +12,6 @@ export const BLACK_BISHOP = "♝";
 export const BLACK_KNIGHT = "♞";
 export const BLACK_PAWN = "♟";
 
-export type Empty = null;
 export type Piece =
   | typeof WHITE_KING
   | typeof WHITE_QUEEN
@@ -26,4 +25,3 @@ export type Piece =
   | typeof BLACK_BISHOP
   | typeof BLACK_KNIGHT
   | typeof BLACK_PAWN;
-export type PieceOrEmpty = Piece | Empty;
