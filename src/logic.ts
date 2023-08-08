@@ -81,6 +81,95 @@ function isValidQueenMove(
   return isValidRookMove(board, from, to) || isValidBishopMove(board, from, to);
 }
 
+function isValidRookMove(
+  board: Chessboard,
+  from: { row: number; col: number },
+  to: { row: number; col: number }
+): boolean {
+  const dx = Math.abs(to.col - from.col);
+  const dy = Math.abs(to.row - from.row);
+
+  // Check for valid rook movement
+  if ((dx === 0 && dy > 0) || (dx > 0 && dy === 0)) {
+    const stepX = dx === 0 ? 0 : (to.col - from.col) / dx;
+    const stepY = dy === 0 ? 0 : (to.row - from.row) / dy;
+
+    // Check for friendly pieces blocking the way
+    for (let i = 1; i < Math.max(dx, dy); i++) {
+      const row = from.row + i * stepY;
+      const col = from.col + i * stepX;
+      if (board[row][col]) {
+        return false;
+      }
+    }
+
+    // Check for capturing an enemy piece
+    const targetPiece = board[to.row][to.col];
+    if (targetPiece) {
+      return !areSameColor(targetPiece, board[from.row][from.col]);
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+function isValidBishopMove(
+  board: Chessboard,
+  from: { row: number; col: number },
+  to: { row: number; col: number }
+): boolean {
+  const dx = Math.abs(to.col - from.col);
+  const dy = Math.abs(to.row - from.row);
+
+  // Check for valid bishop movement
+  if (dx === dy) {
+    const stepX = (to.col - from.col) / dx;
+    const stepY = (to.row - from.row) / dy;
+
+    // Check for friendly pieces blocking the way
+    for (let i = 1; i < dx; i++) {
+      const row = from.row + i * stepY;
+      const col = from.col + i * stepX;
+      if (board[row][col]) {
+        return false;
+      }
+    }
+
+    // Check for capturing an enemy piece
+    const targetPiece = board[to.row][to.col];
+    if (targetPiece) {
+      return !areSameColor(targetPiece, board[from.row][from.col]);
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+function isValidKnightMove(
+  board: Chessboard,
+  from: { row: number; col: number },
+  to: { row: number; col: number }
+): boolean {
+  const dx = Math.abs(to.col - from.col);
+  const dy = Math.abs(to.row - from.row);
+
+  // Check for valid knight movement
+  if ((dx === 2 && dy === 1) || (dx === 1 && dy === 2)) {
+    const targetPiece = board[to.row][to.col];
+
+    // Check for capturing an enemy piece or moving to an empty square
+    if (!targetPiece || !areSameColor(targetPiece, board[from.row][from.col])) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function isWhitePiece(piece: Piece): boolean {
   return (
     piece === WHITE_KING ||
@@ -92,40 +181,22 @@ function isWhitePiece(piece: Piece): boolean {
   );
 }
 
-function isValidRookMove(
-  board: Chessboard,
-  from: { row: number; col: number },
-  to: { row: number; col: number }
-): boolean {
-  const dx = Math.abs(to.col - from.col);
-  const dy = Math.abs(to.row - from.row);
-
-  // The rook can move horizontally or vertically
-  return (dx === 0 && dy > 0) || (dx > 0 && dy === 0);
+function isBlackPiece(piece: Piece): boolean {
+  return (
+    piece === BLACK_KING ||
+    piece === BLACK_QUEEN ||
+    piece === BLACK_ROOK ||
+    piece === BLACK_BISHOP ||
+    piece === BLACK_KNIGHT ||
+    piece === BLACK_PAWN
+  );
 }
 
-function isValidBishopMove(
-  board: Chessboard,
-  from: { row: number; col: number },
-  to: { row: number; col: number }
-): boolean {
-  const dx = Math.abs(to.col - from.col);
-  const dy = Math.abs(to.row - from.row);
-
-  // The bishop can move diagonally
-  return dx === dy;
-}
-
-function isValidKnightMove(
-  board: Chessboard,
-  from: { row: number; col: number },
-  to: { row: number; col: number }
-): boolean {
-  const dx = Math.abs(to.col - from.col);
-  const dy = Math.abs(to.row - from.row);
-
-  // The knight can move in an L-shape (2 squares in one direction and 1 square perpendicular)
-  return (dx === 2 && dy === 1) || (dx === 1 && dy === 2);
+function areSameColor(pieceA: Piece, pieceB: Piece): boolean {
+  return (
+    (isWhitePiece(pieceA) && isWhitePiece(pieceB)) ||
+    (isBlackPiece(pieceA) && isBlackPiece(pieceB))
+  );
 }
 
 function isValidPawnMove(
