@@ -1,18 +1,17 @@
-import { Chessboard } from "./board";
+import { Chessboard, Square } from "./board";
 import {
-  WHITE_KING,
+  BLACK_BISHOP,
   BLACK_KING,
-  WHITE_QUEEN,
+  BLACK_KNIGHT,
+  BLACK_PAWN,
   BLACK_QUEEN,
-  WHITE_ROOK,
   BLACK_ROOK,
   WHITE_BISHOP,
-  BLACK_BISHOP,
+  WHITE_KING,
   WHITE_KNIGHT,
-  BLACK_KNIGHT,
   WHITE_PAWN,
-  BLACK_PAWN,
-  Piece,
+  WHITE_QUEEN,
+  WHITE_ROOK,
 } from "./pieces";
 
 type Move = {
@@ -66,7 +65,16 @@ function isValidKingMove(
   const dy = Math.abs(to.row - from.row);
 
   // The king can move one square in any direction
-  return dx <= 1 && dy <= 1;
+  if (dx > 1 || dy > 1) {
+    return false;
+  }
+
+  const me = board[from.row][from.col];
+  const targetPiece = board[to.row][to.col];
+  if (targetPiece) {
+    return !areSameColor(me, targetPiece);
+  }
+  return true;
 }
 
 const isStayingInPlace = ({ from, to }: Move): boolean =>
@@ -90,29 +98,30 @@ function isValidRookMove(
   const dy = Math.abs(to.row - from.row);
 
   // Check for valid rook movement
-  if ((dx === 0 && dy > 0) || (dx > 0 && dy === 0)) {
-    const stepX = dx === 0 ? 0 : (to.col - from.col) / dx;
-    const stepY = dy === 0 ? 0 : (to.row - from.row) / dy;
-
-    // Check for friendly pieces blocking the way
-    for (let i = 1; i < Math.max(dx, dy); i++) {
-      const row = from.row + i * stepY;
-      const col = from.col + i * stepX;
-      if (board[row][col]) {
-        return false;
-      }
-    }
-
-    // Check for capturing an enemy piece
-    const targetPiece = board[to.row][to.col];
-    if (targetPiece) {
-      return !areSameColor(targetPiece, board[from.row][from.col]);
-    }
-
-    return true;
+  if (!(dx === 0 && dy > 0) && !(dx > 0 && dy === 0)) {
+    return false;
   }
 
-  return false;
+  const stepX = dx === 0 ? 0 : (to.col - from.col) / dx;
+  const stepY = dy === 0 ? 0 : (to.row - from.row) / dy;
+
+  // Check for pieces blocking the way
+  for (let i = 1; i < Math.max(dx, dy); i++) {
+    const row = from.row + i * stepY;
+    const col = from.col + i * stepX;
+    if (board[row][col]) {
+      return false;
+    }
+  }
+
+  // Check for capturing an enemy piece
+  const me = board[from.row][from.col];
+  const targetPiece = board[to.row][to.col];
+  if (targetPiece) {
+    return !areSameColor(me, targetPiece);
+  }
+
+  return true;
 }
 
 function isValidBishopMove(
@@ -124,29 +133,29 @@ function isValidBishopMove(
   const dy = Math.abs(to.row - from.row);
 
   // Check for valid bishop movement
-  if (dx === dy) {
-    const stepX = (to.col - from.col) / dx;
-    const stepY = (to.row - from.row) / dy;
+  if (dx !== dy) {
+    return false;
+  }
+  const stepX = (to.col - from.col) / dx;
+  const stepY = (to.row - from.row) / dy;
 
-    // Check for friendly pieces blocking the way
-    for (let i = 1; i < dx; i++) {
-      const row = from.row + i * stepY;
-      const col = from.col + i * stepX;
-      if (board[row][col]) {
-        return false;
-      }
+  // Check for pieces blocking the way
+  for (let i = 1; i < dx; i++) {
+    const row = from.row + i * stepY;
+    const col = from.col + i * stepX;
+    if (board[row][col]) {
+      return false;
     }
-
-    // Check for capturing an enemy piece
-    const targetPiece = board[to.row][to.col];
-    if (targetPiece) {
-      return !areSameColor(targetPiece, board[from.row][from.col]);
-    }
-
-    return true;
   }
 
-  return false;
+  // Check for capturing an enemy piece
+  const me = board[from.row][from.col];
+  const targetPiece = board[to.row][to.col];
+  if (targetPiece) {
+    return !areSameColor(me, targetPiece);
+  }
+
+  return true;
 }
 
 function isValidKnightMove(
@@ -158,19 +167,21 @@ function isValidKnightMove(
   const dy = Math.abs(to.row - from.row);
 
   // Check for valid knight movement
-  if ((dx === 2 && dy === 1) || (dx === 1 && dy === 2)) {
-    const targetPiece = board[to.row][to.col];
-
-    // Check for capturing an enemy piece or moving to an empty square
-    if (!targetPiece || !areSameColor(targetPiece, board[from.row][from.col])) {
-      return true;
-    }
+  if (!(dx === 2 && dy === 1) && !(dx === 1 && dy === 2)) {
+    return false;
   }
 
-  return false;
+  const me = board[from.row][from.col];
+  const targetPiece = board[to.row][to.col];
+
+  // Check for capturing an enemy piece or moving to an empty square
+  return !targetPiece || !areSameColor(me, targetPiece);
 }
 
-function isWhitePiece(piece: Piece): boolean {
+function isWhitePiece(piece: Square): boolean {
+  if (piece === null) {
+    return false;
+  }
   return (
     piece === WHITE_KING ||
     piece === WHITE_QUEEN ||
@@ -181,7 +192,10 @@ function isWhitePiece(piece: Piece): boolean {
   );
 }
 
-function isBlackPiece(piece: Piece): boolean {
+function isBlackPiece(piece: Square): boolean {
+  if (piece === null) {
+    return false;
+  }
   return (
     piece === BLACK_KING ||
     piece === BLACK_QUEEN ||
@@ -192,7 +206,7 @@ function isBlackPiece(piece: Piece): boolean {
   );
 }
 
-function areSameColor(pieceA: Piece, pieceB: Piece): boolean {
+function areSameColor(pieceA: Square, pieceB: Square): boolean {
   return (
     (isWhitePiece(pieceA) && isWhitePiece(pieceB)) ||
     (isBlackPiece(pieceA) && isBlackPiece(pieceB))
@@ -207,16 +221,15 @@ function isValidPawnMove(
   const dx = to.col - from.col;
   const dy = to.row - from.row;
   const piece = board[from.row][from.col];
+  const targetPiece = board[to.row][to.col];
   const isWhite = piece === WHITE_PAWN;
+  const targetPieceOk = isWhite
+    ? isBlackPiece(targetPiece)
+    : isWhitePiece(targetPiece);
 
   // Check for capturing an opponent's piece diagonally
   if (Math.abs(dx) === 1 && dy === (isWhite ? -1 : 1)) {
-    const targetPiece = board[to.row][to.col];
-    return targetPiece
-      ? isWhite
-        ? !isWhitePiece(targetPiece)
-        : isWhitePiece(targetPiece)
-      : isEnPassantMove(board, from, to);
+    return targetPiece ? targetPieceOk : isEnPassantMove(board, from, to);
   }
 
   // Check for moving one or two squares forward (depending on whether it's the pawn's first move)
@@ -225,13 +238,13 @@ function isValidPawnMove(
       (isWhite && from.row === 1 && to.row === 3 && !board[2][from.col]) ||
       (isWhite && from.row + 1 === to.row && !board[to.row][from.col])
     ) {
-      return true;
+      return targetPieceOk;
     }
     if (
       (!isWhite && from.row === 6 && to.row === 4 && !board[5][from.col]) ||
       (!isWhite && from.row - 1 === to.row && !board[to.row][from.col])
     ) {
-      return true;
+      return targetPieceOk;
     }
   }
 
