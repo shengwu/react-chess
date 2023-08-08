@@ -232,22 +232,26 @@ function isValidPawnMove(
     return targetPiece ? targetPieceOk : isEnPassantMove(board, from, to);
   }
 
+  // Pawn can't move sideways
+  if (dx !== 0) {
+    return false;
+  }
+
   // Check for moving one or two squares forward (depending on whether it's the pawn's first move)
-  if (dx === 0) {
-    if (
-      (isWhite && from.row === 1 && to.row === 3 && !board[2][from.col]) ||
-      (isWhite && from.row + 1 === to.row && !board[to.row][from.col])
-    ) {
-      return targetPieceOk;
-    }
-    if (
-      (!isWhite && from.row === 6 && to.row === 4 && !board[5][from.col]) ||
-      (!isWhite && from.row - 1 === to.row && !board[to.row][from.col])
-    ) {
+  if (isWhite) {
+    const oneSpaceOk = from.row + 1 === to.row && !board[to.row][from.col];
+    const twoSpacesOk = from.row === 1 && to.row === 3 && !board[2][from.col];
+    if (oneSpaceOk || twoSpacesOk) {
       return targetPieceOk;
     }
   }
 
+  // Black pawn
+  const oneSpaceOk = from.row - 1 === to.row && !board[to.row][from.col];
+  const twoSpacesOk = from.row === 6 && to.row === 4 && !board[5][from.col];
+  if (oneSpaceOk || twoSpacesOk) {
+    return targetPieceOk;
+  }
   return false;
 }
 
