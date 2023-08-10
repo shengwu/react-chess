@@ -80,25 +80,55 @@ describe("full board tests", () => {
 
   it("should allow valid pawn move", () => {
     const move = { from: { row: 1, col: 4 }, to: { row: 2, col: 4 } };
-    const result = isValidMove(board, move, defaultPreviousMove);
+    const result = isValidMoveWithDefaultPrevious(board, move);
     expect(result).toBe(true);
   });
 
   it("should reject invalid pawn move", () => {
     const move = { from: { row: 1, col: 4 }, to: { row: 2, col: 5 } };
-    const result = isValidMove(board, move, defaultPreviousMove);
+    const result = isValidMoveWithDefaultPrevious(board, move);
     expect(result).toBe(false);
   });
 
   it("should allow valid knight move", () => {
     const move = { from: { row: 0, col: 1 }, to: { row: 2, col: 2 } };
-    const result = isValidMove(board, move, defaultPreviousMove);
+    const result = isValidMoveWithDefaultPrevious(board, move);
     expect(result).toBe(true);
   });
 
   it("should reject invalid knight move", () => {
     const move = { from: { row: 3, col: 3 }, to: { row: 1, col: 2 } };
-    const result = isValidMove(board, move, defaultPreviousMove);
+    const result = isValidMoveWithDefaultPrevious(board, move);
+    expect(result).toBe(false);
+  });
+
+  it("should allow valid bishop move with cleared path", () => {
+    // Clear the path for the bishop
+    board[1][1] = null;
+    board[2][0] = null;
+    const move = { from: { row: 0, col: 2 }, to: { row: 2, col: 0 } };
+    const result = isValidMoveWithDefaultPrevious(board, move);
+    expect(result).toBe(true);
+  });
+
+  it("should reject invalid bishop move (obstructed)", () => {
+    const move = { from: { row: 0, col: 2 }, to: { row: 2, col: 0 } };
+    const result = isValidMoveWithDefaultPrevious(board, move);
+    expect(result).toBe(false);
+  });
+
+  it("should allow valid rook move with cleared path", () => {
+    // Clear the path for the rook
+    board[0][1] = null;
+    board[0][2] = null;
+    const move = { from: { row: 0, col: 0 }, to: { row: 0, col: 2 } };
+    const result = isValidMoveWithDefaultPrevious(board, move);
+    expect(result).toBe(true);
+  });
+
+  it("should reject invalid rook move (obstructed)", () => {
+    const move = { from: { row: 0, col: 0 }, to: { row: 0, col: 3 } };
+    const result = isValidMoveWithDefaultPrevious(board, move);
     expect(result).toBe(false);
   });
 });
