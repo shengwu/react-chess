@@ -19,7 +19,11 @@ type Move = {
   to: { row: number; col: number };
 };
 
-export function isValidMove(board: Chessboard, move: Move): boolean {
+export function isValidMove(
+  board: Chessboard,
+  move: Move,
+  previousMove: Move
+): boolean {
   const { from, to } = move;
   const piece = board[from.row][from.col];
 
@@ -39,22 +43,22 @@ export function isValidMove(board: Chessboard, move: Move): boolean {
   switch (piece) {
     case WHITE_KING:
     case BLACK_KING:
-      return isValidKingMove(board, from, to);
+      return isValidKingMove(move);
     case WHITE_QUEEN:
     case BLACK_QUEEN:
-      return isValidQueenMove(board, from, to);
+      return isValidQueenMove(board, move);
     case WHITE_ROOK:
     case BLACK_ROOK:
-      return isValidRookMove(board, from, to);
+      return isValidRookMove(board, move);
     case WHITE_BISHOP:
     case BLACK_BISHOP:
-      return isValidBishopMove(board, from, to);
+      return isValidBishopMove(board, move);
     case WHITE_KNIGHT:
     case BLACK_KNIGHT:
-      return isValidKnightMove(board, from, to);
+      return isValidKnightMove(move);
     case WHITE_PAWN:
     case BLACK_PAWN:
-      return isValidPawnMove(board, from, to);
+      return isValidPawnMove(board, move, previousMove);
     default:
       return false; // Invalid move for an unknown piece.
   }
@@ -64,11 +68,7 @@ function isDestinationValid(row: number, col: number): boolean {
   return row >= 0 && row < 8 && col >= 0 && col < 8;
 }
 
-function isValidKingMove(
-  board: Chessboard,
-  from: { row: number; col: number },
-  to: { row: number; col: number }
-): boolean {
+function isValidKingMove({ from, to }: Move): boolean {
   const dx = Math.abs(to.col - from.col);
   const dy = Math.abs(to.row - from.row);
 
@@ -83,20 +83,12 @@ function isValidKingMove(
 const isStayingInPlace = ({ from, to }: Move): boolean =>
   from.col === to.col && from.row === to.row;
 
-function isValidQueenMove(
-  board: Chessboard,
-  from: { row: number; col: number },
-  to: { row: number; col: number }
-): boolean {
+function isValidQueenMove(board: Chessboard, move: Move): boolean {
   // The queen can move horizontally, vertically, or diagonally
-  return isValidRookMove(board, from, to) || isValidBishopMove(board, from, to);
+  return isValidRookMove(board, move) || isValidBishopMove(board, move);
 }
 
-function isValidRookMove(
-  board: Chessboard,
-  from: { row: number; col: number },
-  to: { row: number; col: number }
-): boolean {
+function isValidRookMove(board: Chessboard, { from, to }: Move): boolean {
   const dx = Math.abs(to.col - from.col);
   const dy = Math.abs(to.row - from.row);
 
@@ -120,11 +112,7 @@ function isValidRookMove(
   return true;
 }
 
-function isValidBishopMove(
-  board: Chessboard,
-  from: { row: number; col: number },
-  to: { row: number; col: number }
-): boolean {
+function isValidBishopMove(board: Chessboard, { from, to }: Move): boolean {
   const dx = Math.abs(to.col - from.col);
   const dy = Math.abs(to.row - from.row);
 
@@ -147,11 +135,7 @@ function isValidBishopMove(
   return true;
 }
 
-function isValidKnightMove(
-  board: Chessboard,
-  from: { row: number; col: number },
-  to: { row: number; col: number }
-): boolean {
+function isValidKnightMove({ from, to }: Move): boolean {
   const dx = Math.abs(to.col - from.col);
   const dy = Math.abs(to.row - from.row);
 
@@ -199,9 +183,10 @@ function areSameColor(pieceA: Square, pieceB: Square): boolean {
 
 function isValidPawnMove(
   board: Chessboard,
-  from: { row: number; col: number },
-  to: { row: number; col: number }
+  move: Move,
+  previousMove: Move
 ): boolean {
+  const { from, to } = move;
   const dx = to.col - from.col;
   const dy = to.row - from.row;
   const piece = board[from.row][from.col];
@@ -209,7 +194,7 @@ function isValidPawnMove(
 
   // Check for capturing an opponent's piece diagonally
   if (Math.abs(dx) === 1 && dy === (isWhite ? -1 : 1)) {
-    return isEnPassantMove(board, from, to);
+    return isEnPassantMove(board, move, previousMove);
   }
 
   // Pawn can't move sideways
@@ -232,28 +217,49 @@ function isValidPawnMove(
   if (oneSpaceOk || twoSpacesOk) {
     return true;
   }
+
   return false;
 }
 
-// TODO: you need knowledge of the previous move
 function isEnPassantMove(
   board: Chessboard,
-  from: { row: number; col: number },
-  to: { row: number; col: number }
+  { from, to }: Move,
+  previousMove: Move
 ): boolean {
-  // Check if the move is a valid en passant move
-  const dx = to.col - from.col;
-  const dy = to.row - from.row;
   const piece = board[from.row][from.col];
   const isWhite = piece === WHITE_PAWN;
+  const isBlack = piece === BLACK_PAWN;
 
-  // Check if the pawn is moving diagonally
-  if (Math.abs(dx) === 1 && dy === (isWhite ? -1 : 1)) {
-    // Check if the target square is empty, and there's a pawn next to it that just moved two squares forward in the previous move
-    const targetRow = isWhite ? to.row + 1 : to.row - 1;
-    const targetPiece = board[targetRow][to.col];
-    return targetPiece === (isWhite ? BLACK_PAWN : WHITE_PAWN);
+  // Only one row where you can en passant
+  if (isWhite && to.row !== 5) {
+    return false;
+  }
+  if (isBlack && to.row !== 2) {
+    return false;
   }
 
-  return false;
+  const { from: prevFrom, to: prevTo } = previousMove;
+  const prevPiece = board[prevTo.row][prevTo.col];
+
+  if (isWhite) {
+    if (prevPiece !== BLACK_PAWN) {
+      return false;
+    }
+    if (prevFrom.col !== to.col || prevFrom.row !== 6 || prevTo.row !== 4) {
+      return false;
+    }
+  } else {
+    // isBlack
+    if (prevPiece !== WHITE_PAWN) {
+      return false;
+    }
+    if (prevFrom.col !== to.col || prevFrom.row !== 1 || prevTo.row !== 3) {
+      return false;
+    }
+  }
+
+  // Destination must be empty (instead of having enemy piece like most captures)
+  // We don't need to explicitly check for this -- if prev pawn move valid
+
+  return true;
 }
