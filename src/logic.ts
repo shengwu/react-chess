@@ -14,10 +14,10 @@ import {
   WHITE_ROOK,
 } from "./pieces";
 
-type Move = {
+export interface Move {
   from: { row: number; col: number };
   to: { row: number; col: number };
-};
+}
 
 export function isValidMove(
   board: Chessboard,
