@@ -194,7 +194,7 @@ function isValidPawnMove(
 
   // Check for capturing an opponent's piece diagonally
   if (Math.abs(dx) === 1 && dy === (isWhite ? -1 : 1)) {
-    return isEnPassantMove(board, move, previousMove);
+    return isValidEnPassantMove(board, move, previousMove);
   }
 
   // Pawn can't move sideways
@@ -204,16 +204,16 @@ function isValidPawnMove(
 
   // Check for moving one or two squares forward (depending on whether it's the pawn's first move)
   if (isWhite) {
-    const oneSpaceOk = from.row + 1 === to.row && !board[to.row][from.col];
-    const twoSpacesOk = from.row === 1 && to.row === 3 && !board[2][from.col];
+    const oneSpaceOk = from.row - 1 === to.row && !board[to.row][from.col];
+    const twoSpacesOk = from.row === 6 && to.row === 4 && !board[5][from.col];
     if (oneSpaceOk || twoSpacesOk) {
       return true;
     }
   }
 
   // Black pawn
-  const oneSpaceOk = from.row - 1 === to.row && !board[to.row][from.col];
-  const twoSpacesOk = from.row === 6 && to.row === 4 && !board[5][from.col];
+  const oneSpaceOk = from.row + 1 === to.row && !board[to.row][from.col];
+  const twoSpacesOk = from.row === 1 && to.row === 3 && !board[2][from.col];
   if (oneSpaceOk || twoSpacesOk) {
     return true;
   }
@@ -221,7 +221,7 @@ function isValidPawnMove(
   return false;
 }
 
-function isEnPassantMove(
+function isValidEnPassantMove(
   board: Chessboard,
   { from, to }: Move,
   previousMove: Move

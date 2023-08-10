@@ -1,8 +1,15 @@
 import { Chessboard } from "./board";
 import { Move, isValidMove } from "./logic";
 import {
+  BLACK_BISHOP,
   BLACK_KING,
+  BLACK_KNIGHT,
+  BLACK_PAWN,
+  BLACK_QUEEN,
+  BLACK_ROOK,
+  WHITE_BISHOP,
   WHITE_KING,
+  WHITE_KNIGHT,
   WHITE_PAWN,
   WHITE_QUEEN,
   WHITE_ROOK,
@@ -18,7 +25,85 @@ const isValidMoveWithDefaultPrevious = (
   a1: Parameters<typeof isValidMove>[1]
 ) => isValidMove(a0, a1, defaultPreviousMove);
 
-describe("Chess Move Validation Tests", () => {
+describe("full board tests", () => {
+  let board: Chessboard;
+
+  beforeEach(() => {
+    // Initialize the board before each test
+    board = [
+      [
+        BLACK_ROOK,
+        BLACK_KNIGHT,
+        BLACK_BISHOP,
+        BLACK_QUEEN,
+        BLACK_KING,
+        BLACK_BISHOP,
+        BLACK_KNIGHT,
+        BLACK_ROOK,
+      ],
+      [
+        BLACK_PAWN,
+        BLACK_PAWN,
+        BLACK_PAWN,
+        BLACK_PAWN,
+        BLACK_PAWN,
+        BLACK_PAWN,
+        BLACK_PAWN,
+        BLACK_PAWN,
+      ],
+      [null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null],
+      [
+        WHITE_PAWN,
+        WHITE_PAWN,
+        WHITE_PAWN,
+        WHITE_PAWN,
+        WHITE_PAWN,
+        WHITE_PAWN,
+        WHITE_PAWN,
+        WHITE_PAWN,
+      ],
+      [
+        WHITE_ROOK,
+        WHITE_KNIGHT,
+        WHITE_BISHOP,
+        WHITE_QUEEN,
+        WHITE_KING,
+        WHITE_BISHOP,
+        WHITE_KNIGHT,
+        WHITE_ROOK,
+      ],
+    ];
+  });
+
+  it("should allow valid pawn move", () => {
+    const move = { from: { row: 1, col: 4 }, to: { row: 2, col: 4 } };
+    const result = isValidMove(board, move, defaultPreviousMove);
+    expect(result).toBe(true);
+  });
+
+  it("should reject invalid pawn move", () => {
+    const move = { from: { row: 1, col: 4 }, to: { row: 2, col: 5 } };
+    const result = isValidMove(board, move, defaultPreviousMove);
+    expect(result).toBe(false);
+  });
+
+  it("should allow valid knight move", () => {
+    const move = { from: { row: 0, col: 1 }, to: { row: 2, col: 2 } };
+    const result = isValidMove(board, move, defaultPreviousMove);
+    expect(result).toBe(true);
+  });
+
+  it("should reject invalid knight move", () => {
+    const move = { from: { row: 3, col: 3 }, to: { row: 1, col: 2 } };
+    const result = isValidMove(board, move, defaultPreviousMove);
+    expect(result).toBe(false);
+  });
+});
+
+describe("tests - small board", () => {
   it("should validate valid king moves", () => {
     const board: Chessboard = [
       [null, null, null, null],
